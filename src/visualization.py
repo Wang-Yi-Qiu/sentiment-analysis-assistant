@@ -3,6 +3,7 @@ import seaborn as sns
 import pandas as pd
 import json
 import os
+from datetime import datetime
 
 # 设置中文字体 (尝试自动寻找可用字体)
 def set_chinese_font():
@@ -70,11 +71,34 @@ def plot_training_history(log_history, save_path=None):
         plt.legend()
         plt.grid(True, alpha=0.3)
     
+    # 确保目录存在
+    save_dir = os.path.join(Config.RESULTS_DIR, "images")
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     plt.tight_layout()
-    if save_path:
-        print(f"Saving plot to {save_path}...")
-        plt.savefig(save_path)
-    # plt.show() # 在服务器或脚本运行时通常不需要阻塞显示，或者用户可能看不到弹窗
+    
+    # 生成时间戳 string，例如: 2024-12-18_14-30-00
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    # 默认保存路径
+    if save_path is None:
+        save_path = os.path.join(save_dir, f"training_metrics_{timestamp}.png")
+        
+    print(f"Saving plot to {save_path}...")
+    plt.savefig(save_path)
+    
+    # 也可以保存一份 JSON 或 TXT 格式的最终指标
+    if not eval_acc.empty:
+        final_acc = eval_acc.iloc[-1]['eval_accuracy']
+        final_loss = eval_acc.iloc[-1]['eval_loss'] if 'eval_loss' in eval_acc.columns else "N/A"
+        metrics_file = os.path.join(save_dir, f"metrics_{timestamp}.txt")
+        with open(metrics_file, "w") as f:
+            f.write(f"Timestamp: {timestamp}\n")
+            f.write(f"Final Validation Accuracy: {final_acc:.4f}\n")
+            f.write(f"Final Validation Loss: {final_loss}\n")
+            f.write(f"Plot saved to: {os.path.basename(save_path)}\n")
+        print(f"Saved metrics text to {metrics_file}")
 
 def load_and_plot_logs(log_dir):
     """
@@ -89,3 +113,35 @@ def load_and_plot_logs(log_dir):
         data = json.load(f)
         
     plot_training_history(data['log_history'])
+
+if __name__ == "__main__":
+    import sys
+    # 如果直接运行此脚本，解决相对导入问题
+    # 将上一级目录加入 sys.path
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(project_root)
+    
+    from src.config import Config
+    
+    # 尝试寻找训练日志
+    # 1. 优先查看 results 下是否有 checkpoint
+    import glob
+    
+    # 找最新的 checkpoints
+    search_paths = [
+        Config.OUTPUT_DIR,
+        os.path.join(Config.RESULTS_DIR, "checkpoint-*")
+    ]
+    
+    candidates = []
+    for p in search_paths:
+        candidates.extend(glob.glob(p))
+    
+    if candidates:
+        # 找最新的
+        candidates.sort(key=os.path.getmtime)
+        latest_ckpt = candidates[-1]
+        print(f"Loading logs from: {latest_ckpt}")
+        load_and_plot_logs(latest_ckpt)
+    else:
+        print("未找到任何 checkpoint 或 trainer_state.json 日志文件。")

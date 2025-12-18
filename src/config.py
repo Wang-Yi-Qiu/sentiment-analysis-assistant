@@ -6,6 +6,7 @@ class Config:
     DATA_DIR = os.path.join(ROOT_DIR, 'data')
     CHECKPOINT_DIR = os.path.join(ROOT_DIR, 'checkpoints')
     RESULTS_DIR = os.path.join(ROOT_DIR, 'results')
+    OUTPUT_DIR = CHECKPOINT_DIR # Alias for compatibility
     
     # 模型配置
     BASE_MODEL = "google-bert/bert-base-chinese"
