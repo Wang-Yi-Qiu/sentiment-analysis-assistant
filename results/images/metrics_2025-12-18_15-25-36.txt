@@ -1,0 +1,4 @@
+Timestamp: 2025-12-18_15-25-36
+Final Validation Accuracy: 0.7719
+Final Validation Loss: 0.538950502872467
+Plot saved to: training_metrics_2025-12-18_15-25-36.png

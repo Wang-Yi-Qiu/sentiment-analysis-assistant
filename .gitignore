@@ -12,11 +12,19 @@ ENV/
 env.bak/
 venv.bak/
 
-# Data
-data/
-results/
-checkpoints/
+# Project Directories
 logs/
+
+# Results Directory Rules
+results/*
+!results/images/
+!results/*.txt
+!results/checkpoint-4000/
+results/checkpoint-4000/*.pt  # Ignore heavy optimizer states
+results/checkpoint-4000/rng_state.pth
+
+# Checkpoints Directory
+checkpoints/
 
 # IDEs
 .vscode/
