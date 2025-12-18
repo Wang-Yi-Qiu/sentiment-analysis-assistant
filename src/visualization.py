@@ -10,14 +10,27 @@ def set_chinese_font():
     plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'PingFang SC', 'Heiti TC']
     plt.rcParams['axes.unicode_minus'] = False
 
-def plot_data_distribution(dataset_dict):
+def plot_data_distribution(dataset_dict, save_path=None):
     """
     绘制数据集中 Positive/Neutral/Negative 的分布饼图
     """
     set_chinese_font()
     
     # 统计数量
-    train_labels = dataset_dict['train']['label'] if 'label' in dataset_dict['train'].features else [x['label'] for x in dataset_dict['train']]
+    # 兼容 dataset_dict (DatasetDict) 或 dataset (Dataset)
+    if hasattr(dataset_dict, 'keys') and 'train' in dataset_dict.keys():
+        ds = dataset_dict['train']
+    else:
+        ds = dataset_dict
+        
+    # 统计数量
+    if 'label' in ds.features:
+        train_labels = ds['label']
+    elif 'labels' in ds.features:
+        train_labels = ds['labels']
+    else:
+        # Fallback
+        train_labels = [x.get('label', x.get('labels')) for x in ds]
     
     # 映射回字符串以便显示
     id2label = {0: 'Negative (消极)', 1: 'Neutral (中性)', 2: 'Positive (积极)'}
@@ -29,7 +42,12 @@ def plot_data_distribution(dataset_dict):
     plt.figure(figsize=(10, 6))
     plt.pie(counts, labels=counts.index, autopct='%1.1f%%', startangle=140, colors=sns.color_palette("pastel"))
     plt.title('训练集情感分布')
-    plt.show()
+    plt.tight_layout()
+    
+    if save_path:
+        print(f"Saving distribution plot to {save_path}...")
+        plt.savefig(save_path)
+    # plt.show()
 
 def plot_training_history(log_history, save_path=None):
     """
@@ -116,15 +134,40 @@ def load_and_plot_logs(log_dir):
 
 if __name__ == "__main__":
     import sys
+    import os  # Explicitly import os here if not globally sufficient or for clarity
     # 如果直接运行此脚本，解决相对导入问题
     # 将上一级目录加入 sys.path
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(project_root)
     
     from src.config import Config
-    
-    # 尝试寻找训练日志
-    # 1. 优先查看 results 下是否有 checkpoint
+    # ---------------------------------------------------------
+    # 2. 生成数据分布图 (Data Distribution)
+    # ---------------------------------------------------------
+    try:
+        print("\n正在加载数据集以生成样本分布分析...")
+        from transformers import AutoTokenizer
+        from src.dataset import DataProcessor
+        
+        tokenizer = AutoTokenizer.from_pretrained(Config.BASE_MODEL)
+        processor = DataProcessor(tokenizer)
+        # 尝试从 data 目录加载处理好的数据 (快)
+        dataset = processor.get_processed_dataset(cache_dir=Config.DATA_DIR)
+        
+        # 生成带时间戳的文件名
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        dist_save_path = os.path.join(Config.RESULTS_DIR, "images", f"data_distribution_{timestamp}.png")
+        
+        # 绘图并保存
+        plot_data_distribution(dataset, save_path=dist_save_path)
+        print(f"数据样本分布分析已保存至: {dist_save_path}")
+        
+    except Exception as e:
+        print(f"无法生成数据分布图 (可能是数据尚未下载或处理): {e}")
+
+    # ---------------------------------------------------------
+    # 3. 生成训练曲线 (Training History)
+    # ---------------------------------------------------------
     import glob
     
     # 找最新的 checkpoints

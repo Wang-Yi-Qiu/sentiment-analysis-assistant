@@ -1,21 +1,29 @@
-# Python
+# General
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Mac
 .DS_Store
 
-# Data & Models
-checkpoints/
-results/
-data/downloads/
-data/processed_dataset/
-*.safetensors
-*.bin
-
-# Environment
+# Environments
 .env
 .venv
 env/
 venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Data
+data/
+results/
+checkpoints/
+logs/
+
+# IDEs
+.vscode/
+.idea/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Office Temp Files
+~$*

@@ -1,8 +1,8 @@
 import os
 import sys
 from transformers import AutoTokenizer
-from config import Config
-from dataset import DataProcessor
+from .config import Config
+from .dataset import DataProcessor
 
 def main():
     print("⏳ 开始下载并处理数据...")
