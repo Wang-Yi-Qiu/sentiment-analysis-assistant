@@ -1,0 +1,6 @@
+transformers>=4.30.0
+datasets>=2.14.0
+scikit-learn
+pandas
+accelerate>=0.21.0
+tqdm

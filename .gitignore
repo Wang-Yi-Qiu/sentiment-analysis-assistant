@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Mac
+.DS_Store
+
+# Data & Models
+checkpoints/
+results/
+data/downloads/
+data/processed_dataset/
+*.safetensors
+*.bin
+
+# Environment
+.env
+.venv
+env/
+venv/
